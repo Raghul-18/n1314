@@ -1,64 +1,61 @@
 def sjf(process_list):
-    # declaring stuff to display our answer
     completed_process = {}
     gantt_chart = []
-    
-    # setting time to 0 initially
     t = 0
-    
-    # running loop till all processes are serviced
     while process_list != []:
-        # finding out all the available processes in that time interval
-        available = []
-        for process in process_list:
-            arrival_time = process[1]
-            if arrival_time <= t:
-                available.append(process)
-        
-        # before that let's address the boundary condition
+        available = [process for process in process_list if process[1] <= t]
+
         if available == []:
             gantt_chart.append(("Idle", t))
             t += 1
             continue
         else:
             available.sort()
-            # this is the process with the lowest burst time
             process = available[0]
-            bt, at, pname = process
-            t += bt
-            gantt_chart.append((pname, t))
+            t += process[0]
+            gantt_chart.append((process[2], t))
             process_list.remove(process)
+            process_name = process[2]
             ct = t
-            tt = ct - at
-            wt = tt - bt
-            completed_process[pname] = {'Arrival Time': at, 'Burst Time': bt, 'Completion Time': ct, 'Turnaround Time': tt, 'Waiting Time': wt}
-    
-    # Print Gantt Chart
-    print("Gantt Chart:")
-    for entry in gantt_chart:
-        print(f"| {entry[0]}", end=" ")
-    print("| Done\n" + "-" * 50)
-    
-    # Print Process Details Table
-    print("\nProcess Details:")
-    print("| {:<10} | {:<15} | {:<10} | {:<18} | {:<15} | {:<15} |".format("Process", "Arrival Time", "Burst Time", "Completion Time", "Turnaround Time", "Waiting Time"))
-    print("-" * 80)
-    total_turnaround_time = 0
-    total_waiting_time = 0
-    for pname, details in completed_process.items():
-        print("| {:<10} | {:<15} | {:<10} | {:<18} | {:<15} | {:<15} |".format(
-            pname, details['Arrival Time'], details['Burst Time'], details['Completion Time'], details['Turnaround Time'], details['Waiting Time']))
-        total_turnaround_time += details['Turnaround Time']
-        total_waiting_time += details['Waiting Time']
-    print("-" * 80)
-    
-    # Print Average Turnaround Time and Waiting Time
-    num_processes = len(completed_process)
-    avg_turnaround_time = total_turnaround_time / num_processes
-    avg_waiting_time = total_waiting_time / num_processes
-    print(f"\nAverage Turnaround Time: {avg_turnaround_time:.2f}")
-    print(f"Average Waiting Time: {avg_waiting_time:.2f}")
+            tt = ct - process[1]
+            wt = tt - process[0]
+            completed_process[process_name] = [ct, tt, wt]
 
-# Example usage:
-process_list = [[4, 1, "p1"], [2, 2, "p2"], [10, 3, "p3"]]
-sjf(process_list)
+    # Display Gantt Chart
+    print("\nGantt Chart:")
+    print("-" * 35)
+    print("| {:<10} | {:<10} |".format("Process", "Time"))
+    print("-" * 35)
+    for entry in gantt_chart:
+        print("| {:<10} | {:<10} |".format(entry[0], entry[1]))
+    print("-" * 35)
+
+    # Display Completed Process List
+    print("\nCompleted Process List:")
+    print("{:<5} {:<15} {:<15} {:<15}".format("PID", "Completion Time", "Turnaround Time", "Waiting Time"))
+    total_waiting_time = 0
+    total_turnaround_time = 0
+    for pid, values in completed_process.items():
+        wt = values[2]
+        tt = values[1]
+        total_waiting_time += wt
+        total_turnaround_time += tt
+        print("{:<5} {:<15} {:<15} {:<15}".format(pid, values[0], tt, wt))
+
+    # Calculate and print average waiting time and turnaround time
+    avg_waiting_time = total_waiting_time / len(completed_process)
+    avg_turnaround_time = total_turnaround_time / len(completed_process)
+    print("\nAverage Waiting Time:", avg_waiting_time)
+    print("Average Turnaround Time:", avg_turnaround_time)
+
+if __name__ == "__main__":
+    num_processes = int(input("Enter the number of processes: "))
+    process_list = []
+
+    for i in range(num_processes):
+        pid = input(f"Enter the process ID for process {i + 1}: ")
+        bt = int(input(f"Enter the burst time for process {pid}: "))
+        at = int(input(f"Enter the arrival time for process {pid}: "))
+        process_list.append([bt, at, pid])
+
+    sjf(process_list)
